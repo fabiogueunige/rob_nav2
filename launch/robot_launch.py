@@ -75,30 +75,30 @@ def generate_launch_description():
     )
 
     # Specify the actions to be executed
-    move_action_node = Node(
+    move_cmd = Node(
         package='rob_nav2',
-        executable='move_action',
-        name='go_to_waypoint_action',
+        executable='move_action_node',
+        name='move_action_node',
         output='screen',
         parameters = []
     )
-    """
-    find_lower_action_node = Node(
-        package='rob_nav2',
-        executable='find_lower_action',
-        name='find_lower_action',
-        output='screen',
-        parameters = []
-    )
+    
+    #find_lower_cmd = Node(
+    #    package='rob_nav2',
+    #    executable='find_lower_action_node',
+    #    name='find_lower_action_node',
+    #    output='screen',
+    #    parameters = []
+    #)
 
-    inspect_action_node = Node(
-        package='rob_nav2',
-        executable='inspect_action',
-        name='inspect_action',
-        output='screen',
-        parameters = []
-    )
-    """
+    #inspect_cmd = Node(
+    #    package='rob_nav2',
+    #    executable='inspect_action_node',
+    #    name='inspect_action_node',
+    #    output='screen',
+    #    parameters = []
+    #)
+    
 
     return LaunchDescription([
         declare_x_pos,
@@ -114,9 +114,9 @@ def generate_launch_description():
 
         # Planner actions
         plansys2_cmd,
-        move_action_node,
-        # inspect_action_node,
-        # find_lower_action_node,
+        move_cmd,
+        # inspect_cmd,
+        # find_lower_cmd,
 
         # Navigation actions
         nav2_cmd,

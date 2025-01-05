@@ -13,6 +13,7 @@ find_package(plansys2_executor REQUIRED)
 find_package(plansys2_planner REQUIRED)
 find_package(plansys2_problem_expert REQUIRED)
 find_package(plansys2_pddl_parser REQUIRED)
+find_package(xacro REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -36,12 +37,13 @@ ament_target_dependencies(move_action_node ${dependencies})
 ament_target_dependencies(inspect_action_node ${dependencies})
 
 add_executable(find_lower_action_node src/find_lower_action_node.cpp)
-ament_target_dependencies(inspect_action_node ${dependencies})
+ament_target_dependencies(find_lower_action_node ${dependencies})
 ]]
 
 add_executable(planner_controller_node src/planner_controller_node.cpp)
 ament_target_dependencies(planner_controller_node ${dependencies})
 
+install(DIRECTORY urdf worlds DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY launch pddl params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
