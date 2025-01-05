@@ -67,7 +67,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('nav2_bringup'),
             'launch',
-            'tb3_simulation_launch.py')),
+            'navigation_launch.py')),
         launch_arguments={
             'autostart': 'true',
             'params_file': default_nav_path
@@ -82,7 +82,7 @@ def generate_launch_description():
         output='screen',
         parameters = []
     )
-
+    """
     find_lower_action_node = Node(
         package='rob_nav2',
         executable='find_lower_action',
@@ -98,6 +98,7 @@ def generate_launch_description():
         output='screen',
         parameters = []
     )
+    """
 
     return LaunchDescription([
         declare_x_pos,
@@ -114,8 +115,8 @@ def generate_launch_description():
         # Planner actions
         plansys2_cmd,
         move_action_node,
-        inspect_action_node,
-        find_lower_action_node,
+        # inspect_action_node,
+        # find_lower_action_node,
 
         # Navigation actions
         nav2_cmd,

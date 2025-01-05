@@ -1,3 +1,7 @@
+/*
+Sottoscrizione a aruco node e  identificazione 
+degli id dei marker
+*/
 #include <memory>
 
 #include "geometry_msgs/msg/twist.hpp"
@@ -10,11 +14,11 @@
 
 using namespace std::chrono_literals;
 
-class Patrol : public plansys2::ActionExecutorClient
+class Inspect : public plansys2::ActionExecutorClient
 {
 public:
-  Patrol()
-  : plansys2::ActionExecutorClient("patrol", 1s)
+  Inspect()
+  : plansys2::ActionExecutorClient("inspect", 1s)
   {
   }
 
@@ -77,9 +81,9 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<Patrol>();
+  auto node = std::make_shared<Inspect>();
 
-  node->set_parameter(rclcpp::Parameter("action_name", "patrol"));
+  node->set_parameter(rclcpp::Parameter("action_name", "insoect"));
   node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
 
   rclcpp::spin(node->get_node_base_interface());

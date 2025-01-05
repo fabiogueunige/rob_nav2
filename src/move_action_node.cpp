@@ -7,7 +7,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 
 #include "plansys2_executor/ActionExecutorClient.hpp"
@@ -26,41 +26,41 @@ public:
     geometry_msgs::msg::PoseStamped wp;
     wp.header.frame_id = "map";
     wp.header.stamp = now();
-    wp.pose.position.x = 0.0;
-    wp.pose.position.y = -2.0;
+    wp.pose.position.x = -7.0;
+    wp.pose.position.y = -1.5;
     wp.pose.position.z = 0.0;
     wp.pose.orientation.x = 0.0;
     wp.pose.orientation.y = 0.0;
-    wp.pose.orientation.z = 0.0;
-    wp.pose.orientation.w = 1.0;
+    wp.pose.orientation.z = 0.05;
+    wp.pose.orientation.w = 0.0;
     waypoints_["wp1"] = wp;
 
-    wp.pose.position.x = 1.8;
-    wp.pose.position.y = 0.0;
+    wp.pose.position.x = -3.0;
+    wp.pose.position.y = -8.0;
     waypoints_["wp2"] = wp;
 
-    wp.pose.position.x = 0.0;
+    wp.pose.position.x = 6.0;
     wp.pose.position.y = 2.0;
     waypoints_["wp3"] = wp;
 
-    wp.pose.position.x = -0.5;
-    wp.pose.position.y = -0.5;
+    wp.pose.position.x = 7.0;
+    wp.pose.position.y = -5.0;
     waypoints_["wp4"] = wp;
 
-    wp.pose.position.x = -2.0;
-    wp.pose.position.y = -0.4;
+    wp.pose.position.x = -0.0;
+    wp.pose.position.y = 1.0;
     waypoints_["wp_control"] = wp;
 
     using namespace std::placeholders;
-    pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-      "/amcl_pose",
+    pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovariance>(
+      "/odom",
       10,
       std::bind(&MoveAction::current_pos_callback, this, _1));
   }
 
-  void current_pos_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+  void current_pos_callback(const geometry_msgs::msg::PoseWithCovariance::SharedPtr msg)
   {
-    current_pos_ = msg->pose.pose;
+    current_pos_ = msg->pose;
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -135,7 +135,7 @@ private:
   std::shared_future<NavigationGoalHandle::SharedPtr> future_navigation_goal_handle_;
   NavigationGoalHandle::SharedPtr navigation_goal_handle_;
 
-  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pos_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovariance>::SharedPtr pos_sub_;
   geometry_msgs::msg::Pose current_pos_;
   geometry_msgs::msg::PoseStamped goal_pos_;
   nav2_msgs::action::NavigateToPose::Goal navigation_goal_;

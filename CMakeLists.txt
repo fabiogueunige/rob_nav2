@@ -31,11 +31,13 @@ set(dependencies
 add_executable(move_action_node src/move_action_node.cpp)
 ament_target_dependencies(move_action_node ${dependencies})
 
-add_executable(inspect_action_node src/inspect_action_node.cpp)
+
+#[[ add_executable(inspect_action_node src/inspect_action_node.cpp)
 ament_target_dependencies(inspect_action_node ${dependencies})
 
 add_executable(find_lower_action_node src/find_lower_action_node.cpp)
 ament_target_dependencies(inspect_action_node ${dependencies})
+]]
 
 add_executable(planner_controller_node src/planner_controller_node.cpp)
 ament_target_dependencies(planner_controller_node ${dependencies})
@@ -44,8 +46,8 @@ install(DIRECTORY launch pddl params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   move_action_node
-  inspect_action_node
-  find_lower_action_node
+  # inspect_action_node
+  # find_lower_action_node
   planner_controller_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

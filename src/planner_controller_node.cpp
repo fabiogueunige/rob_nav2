@@ -17,7 +17,7 @@ class PatrollingController : public rclcpp::Node
 {
 public:
   PatrollingController()
-  : rclcpp::Node("patrolling_controller"), state_(STARTING)
+  : rclcpp::Node("planner_controller"), state_(STARTING)
   {
   }
 
@@ -32,22 +32,17 @@ public:
 
   void init_knowledge()
   {
-    problem_expert_->addInstance(plansys2::Instance{"r2d2", "robot"});
-    problem_expert_->addInstance(plansys2::Instance{"wp_control", "waypoint"});
+    problem_expert_->addInstance(plansys2::Instance{"franka", "robot"});
+    problem_expert_->addInstance(plansys2::Instance{"home", "waypoint"});
     problem_expert_->addInstance(plansys2::Instance{"wp1", "waypoint"});
     problem_expert_->addInstance(plansys2::Instance{"wp2", "waypoint"});
     problem_expert_->addInstance(plansys2::Instance{"wp3", "waypoint"});
     problem_expert_->addInstance(plansys2::Instance{"wp4", "waypoint"});
 
-    problem_expert_->addPredicate(plansys2::Predicate("(robot_at r2d2 wp_control)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp_control wp1)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp1 wp_control)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp_control wp2)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp2 wp_control)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp_control wp3)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp3 wp_control)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp_control wp4)"));
-    problem_expert_->addPredicate(plansys2::Predicate("(connected wp4 wp_control)"));
+    problem_expert_->addPredicate(plansys2::Predicate("(robot_at franka home)"));
+    problem_expert_->addPredicate(plansys2::Predicate("(visited franka home)"));
+    problem_expert_->addPredicate(plansys2::Predicate("(inspected franka home)"));
+    problem_expert_->addPredicate(plansys2::Predicate("(is_lower wp1)"));
   }
 
   void step()
@@ -56,7 +51,7 @@ public:
       case STARTING:
         {
           // Set the goal for next state
-          problem_expert_->setGoal(plansys2::Goal("(and(patrolled wp1))"));
+          problem_expert_->setGoal(plansys2::Goal("(and(reach_lower franka))"));
 
           // Compute the plan
           auto domain = domain_expert_->getDomain();
@@ -316,13 +311,19 @@ public:
           }
         }
         break;
+      case REORDER: 
+        {
+        // TODO: Implement this state
+        }
+
+        break;
       default:
         break;
     }
   }
 
 private:
-  typedef enum {STARTING, PATROL_WP1, PATROL_WP2, PATROL_WP3, PATROL_WP4} StateType;
+  typedef enum {STARTING, PATROL_WP1, PATROL_WP2, PATROL_WP3, PATROL_WP4, REORDER} StateType;
   StateType state_;
 
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;

@@ -19,7 +19,7 @@
 );; end Predicates ;;;;;;;;;;;;;;;;;;;;
 
 ;; Actions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(:durative-action go_to_waypoint
+(:durative-action move_waypoint
     :parameters (?r - robot ?wp1 ?wp2 - waypoint)
     :duration (= ?duration 60)
     :condition (and
@@ -56,8 +56,6 @@
         ))
     )
     :effect (and 
-        (at start (and 
-        ))
         (at end (and 
             not (visited ?r ?wp)
             (reach_lower ?r)
