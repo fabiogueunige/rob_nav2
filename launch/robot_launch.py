@@ -55,13 +55,13 @@ def generate_launch_description():
         output='screen'
     )
 
-    plansys2_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('plansys2_bringup'),
-            'launch',
-            'plansys2_bringup_launch_monolithic.py')),
-        launch_arguments={'model_file': default_planner_path}.items()
-    )
+    # plansys2_cmd = IncludeLaunchDescription(
+    #    PythonLaunchDescriptionSource(os.path.join(
+    #        get_package_share_directory('plansys2_bringup'),
+    #        'launch',
+    #        'plansys2_bringup_launch_monolithic.py')),
+    #    launch_arguments={'model_file': default_planner_path}.items()
+    #)
 
     nav2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
@@ -74,14 +74,22 @@ def generate_launch_description():
         }.items()
     )
 
-    # Specify the actions to be executed
-    move_cmd = Node(
-        package='rob_nav2',
-        executable='move_action_node',
-        name='move_action_node',
-        output='screen',
-        parameters = []
+    slam_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(
+            get_package_share_directory('slam_toolbox'),
+            'launch',
+            'online_sync_launch.py')),
+        launch_arguments={'use_sim_time': 'true'}.items()
     )
+
+    # Specify the actions to be executed
+    #move_cmd = Node(
+    #    package='rob_nav2',
+    #    executable='move_action_node',
+    #    name='move_action_node',
+    #    output='screen',
+    #    parameters = []
+    #)
     
     #find_lower_cmd = Node(
     #    package='rob_nav2',
@@ -112,15 +120,12 @@ def generate_launch_description():
         joint_state_publisher_node,
         spawn_entity,
 
-        # Planner actions
-        plansys2_cmd,
-        move_cmd,
+        # Planner actions % to activate!!
+        # plansys2_cmd,
+        # move_cmd,
         # inspect_cmd,
         # find_lower_cmd,
 
-        # Navigation actions
-        nav2_cmd,
-        
         ExecuteProcess(
             cmd=['gazebo', '--verbose', default_world_path, '-s', 'libgazebo_ros_factory.so'],
             output='screen'
@@ -129,4 +134,8 @@ def generate_launch_description():
             cmd=['rviz2', '-d', rviz_config_path],
             output='screen'
         ),
+
+        # Navigation actions
+        slam_cmd,
+        nav2_cmd,
     ])

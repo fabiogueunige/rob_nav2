@@ -8,6 +8,8 @@ find_package(rclcpp_action REQUIRED)
 find_package(plansys2_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(slam_toolbox REQUIRED)
+find_package(nav2_bringup REQUIRED)
 find_package(plansys2_domain_expert REQUIRED)
 find_package(plansys2_executor REQUIRED)
 find_package(plansys2_planner REQUIRED)
@@ -22,6 +24,8 @@ set(dependencies
     rclcpp_action
     plansys2_msgs
     nav2_msgs
+    nav2_bringup
+    slam_toolbox
     plansys2_domain_expert
     plansys2_executor
     plansys2_planner
@@ -44,7 +48,7 @@ add_executable(planner_controller_node src/planner_controller_node.cpp)
 ament_target_dependencies(planner_controller_node ${dependencies})
 
 install(DIRECTORY urdf worlds DESTINATION share/${PROJECT_NAME})
-install(DIRECTORY launch pddl params DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch pddl config params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   move_action_node
