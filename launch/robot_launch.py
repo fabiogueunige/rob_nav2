@@ -8,6 +8,7 @@ from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+from launch.actions import TimerAction
 
 
 def generate_launch_description():
@@ -70,6 +71,7 @@ def generate_launch_description():
             'navigation_launch.py')),
         launch_arguments={
             'autostart': 'true',
+            'use_sim_time': 'false',
             'params_file': default_nav_path
         }.items()
     )
@@ -135,7 +137,13 @@ def generate_launch_description():
             output='screen'
         ),
 
-        # Navigation actions
-        slam_cmd,
-        nav2_cmd,
+        # Navigation actions with delay
+        TimerAction(
+            period=2.0,
+            actions=[slam_cmd]
+        ),
+        TimerAction(
+            period=2.0,
+            actions=[nav2_cmd]
+        ),
     ])
