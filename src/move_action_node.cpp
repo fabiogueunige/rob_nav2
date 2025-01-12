@@ -1,3 +1,9 @@
+/*
+move action node
+Publisher: /cmd_vel
+Subscriber: /odom
+
+*/
 #include <math.h>
 
 #include <memory>
@@ -9,6 +15,7 @@
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
+#include "rob_nav2/srv/markers_order.hpp"
 
 #include "plansys2_executor/ActionExecutorClient.hpp"
 
@@ -16,6 +23,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 
 using namespace std::chrono_literals;
+
 
 class MoveAction : public plansys2::ActionExecutorClient
 {
@@ -56,6 +64,10 @@ public:
       "/odom",
       10,
       std::bind(&MoveAction::current_pos_callback, this, _1));
+    
+    markers_order_service_ = create_service<rob_nav2::srv::MarkersOrder>(
+      "/marker_order",
+      std::bind(&MoveAction::handle_service, this, _1, _2));
   }
 
   void current_pos_callback(const geometry_msgs::msg::PoseWithCovariance::SharedPtr msg)
@@ -103,6 +115,7 @@ public:
       };
 
     send_goal_options.result_callback = [this](auto) {
+        waypoint_order_.push_back(wp_to_navigate);
         finish(true, 1.0, "Move completed");
       };
 
@@ -120,11 +133,26 @@ private:
       (pos1.position.y - pos2.position.y) * (pos1.position.y - pos2.position.y));
   }
 
+  void handle_service(
+    const std::shared_ptr<rob_nav2::srv::MarkersOrder::Request> request,
+    std::shared_ptr<rob_nav2::srv::MarkersOrder::Response> response)
+  {
+    int val = waypoint_order_.size();
+    std::vector<int> num(val);
+    for (int i = 0; i < waypoint_order_.size(); i++) {
+      num[i] = std::stoi(waypoint_order_[i].substr(2)); // Assuming "wp" prefix
+    }
+    response->order = num;
+  }
+
   void do_work()
   {
   }
 
   std::map<std::string, geometry_msgs::msg::PoseStamped> waypoints_;
+  std::vector<std::string> waypoint_order_; // save the order of move
+  // send the order of move to the marker_order service
+  rclcpp::Service<rob_nav2::srv::MarkersOrder>::SharedPtr markers_order_service_;
 
   using NavigationGoalHandle =
     rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>;

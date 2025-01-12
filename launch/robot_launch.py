@@ -40,6 +40,12 @@ def generate_launch_description():
         name='joint_state_publisher'
     )
 
+    aruco_node = Node(
+        package='ros2_aruco',
+        executable='aruco_node',
+        name='aruco_node',
+    )
+
     spawn_entity = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
@@ -121,6 +127,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         joint_state_publisher_node,
         spawn_entity,
+        aruco_node,
 
         # Planner actions % to activate!!
         # plansys2_cmd,

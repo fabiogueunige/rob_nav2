@@ -12,7 +12,7 @@
         (robot_at ?r - robot ?p - waypoint) ; actual position of robot
         (visited ?r - robot ?wp - waypoint) ; waypoint has been visited by robot
         (inspected ?r - robot ?wp - waypoint) ; waypoint has been inspected by robot
-        (is_lower ?wp - waypoint) ; waypoint is the lowest
+        (lowest_found) ; waypoint is the lowest
         (reach_lower ?r - robot) ; robot has reached the lower waypoint
         (all_inspected ?r - robot) ; all waypoints have been inspected
     );; end Predicates ;;;;;;;;;;;;;;;;;;;;
@@ -51,12 +51,13 @@
         :duration (= ?duration 60)
         :condition (and 
             (at start (all_inspected ?r))
-            (at start (is_lower ?wp))
         )
         :effect (and 
-            (at end (reach_lower ?r))
+            (at end (lowest_found))
         )
     )
+
+    ; move to lowest !!
     
     ;; Additional helper action to set all_inspected ;;;;;;;
     (:durative-action check_all_inspected
