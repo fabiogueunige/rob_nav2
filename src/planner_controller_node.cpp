@@ -80,10 +80,9 @@ public:
       case PATROL_WP1:
         {
           auto feedback = executor_client_->getFeedBack();
-
           for (const auto & action_feedback : feedback.action_execution_status) {
-            std::cout << "[" << action_feedback.action << " " <<
-              action_feedback.completion * 100.0 << "%]";
+              std::cout << "[" << action_feedback.action << " " <<
+                action_feedback.completion * 100.0 << "%]";
           }
           std::cout << std::endl;
 
@@ -319,7 +318,7 @@ public:
         }
       case TO_LOWEST: 
         {
-          /*
+          
           auto feedback = executor_client_->getFeedBack();
 
           for (const auto & action_feedback : feedback.action_execution_status) {
@@ -327,7 +326,7 @@ public:
               action_feedback.completion * 100.0 << "%]";
           }
           std::cout << std::endl;
-          */
+          
 
           if (!executor_client_->execute_and_check_plan() && executor_client_->getResult()) {
             if (executor_client_->getResult().value().success) {

@@ -103,6 +103,11 @@ public:
 
     dist_to_move = getDistance(goal_pos_.pose, current_pos_);
 
+    if ( waypoint_order_.back() != wp_to_navigate )
+    {
+      waypoint_order_.push_back(wp_to_navigate);
+    }
+
     auto send_goal_options =
       rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
 
@@ -115,7 +120,6 @@ public:
       };
 
     send_goal_options.result_callback = [this](auto) {
-        waypoint_order_.push_back(wp_to_navigate);
         finish(true, 1.0, "Move completed");
       };
 

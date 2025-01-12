@@ -19,6 +19,7 @@ Client: /marker_ids
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "rob_nav2/srv/marker_ids.hpp"
 #include "rob_nav2/srv/markers_order.hpp"
 
@@ -51,19 +52,19 @@ public:
     }
     
     // Invia la richiesta e definisci il callback per gestire la risposta
-    result_order = markers_order_client_->async_send_request(request_order, 
-            std::bind(&FindLowest::handle_order_response, this, std::placeholders::_1)); 
+    markers_order_client_->async_send_request(request_order, 
+          std::bind(&FindLowest::handle_order_response, this, std::placeholders::_1));
 
-    while (!markers_ids_client->wait_for_service(std::chrono::seconds(1))) {
+    while (!marker_ids_client_->wait_for_service(std::chrono::seconds(1))) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(this->get_logger(), "client interrupted while waiting for service orders to appear.");
-        return 1;
       }
       RCLCPP_INFO(this->get_logger(), "waiting for service orders to appear...");
     }
 
-    result_ids = marker_ids_client_->async_send_request(request_ids, 
-            std::bind(&FindLowest::handle_ids_response, this, std::placeholders::_1));
+    marker_ids_client_->async_send_request(request_ids, 
+        std::bind(&FindLowest::handle_ids_response, this, std::placeholders::_1));
+    
 
     return ActionExecutorClient::on_activate(previous_state);
   }
@@ -102,22 +103,25 @@ private:
         index = i;
       }
     }
-
     // Sending integer after wp
-    lowest_publisher_->publish(std_msgs::msg::String("wp" + std::to_string(result_order[index])));
+    std_msgs::msg::String msg;
+    msg.data = "wp" + std::to_string(result_order[index]);
+    lowest_publisher_->publish(msg);
+    
     finish(true, index,"Lowest waypoint found");
   }
 
-  auto request_order;
-  auto request_ids;
-  auto result_order;
-  auto result_ids;
   int min_id;
   int index;
+  std::shared_ptr<rob_nav2::srv::MarkersOrder::Request> request_order;
+  std::shared_ptr<rob_nav2::srv::MarkerIds::Request> request_ids;
+  std::vector<int> result_order;
+  std::vector<int> result_ids;
+
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr lowest_publisher_;
 
   rclcpp::Client<rob_nav2::srv::MarkersOrder>::SharedPtr markers_order_client_;
   rclcpp::Client<rob_nav2::srv::MarkerIds>::SharedPtr marker_ids_client_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr lowest_publisher_;
 };
 
 int main(int argc, char ** argv)

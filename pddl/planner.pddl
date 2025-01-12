@@ -1,5 +1,5 @@
 (define (domain simple)
-    (:requirements :strips :typing :adl :fluents :durative-actions)
+    (:requirements :strips :typing :adl :fluents :durative-actions :universal-preconditions)
 
     ;; Types ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (:types
@@ -13,7 +13,7 @@
         (visited ?r - robot ?wp - waypoint) ; waypoint has been visited by robot
         (inspected ?r - robot ?wp - waypoint) ; waypoint has been inspected by robot
         (lowest_found) ; waypoint is the lowest
-        (reach_lower ?r - robot) ; robot has reached the lower waypoint
+        
         (all_inspected ?r - robot) ; all waypoints have been inspected
     );; end Predicates ;;;;;;;;;;;;;;;;;;;;
 

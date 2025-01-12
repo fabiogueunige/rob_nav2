@@ -62,13 +62,13 @@ def generate_launch_description():
         output='screen'
     )
 
-    # plansys2_cmd = IncludeLaunchDescription(
-    #    PythonLaunchDescriptionSource(os.path.join(
-    #        get_package_share_directory('plansys2_bringup'),
-    #        'launch',
-    #        'plansys2_bringup_launch_monolithic.py')),
-    #    launch_arguments={'model_file': default_planner_path}.items()
-    #)
+    plansys2_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(
+            get_package_share_directory('plansys2_bringup'),
+            'launch',
+            'plansys2_bringup_launch_monolithic.py')),
+        launch_arguments={'model_file': default_planner_path}.items()
+    )
 
     nav2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
@@ -91,29 +91,29 @@ def generate_launch_description():
     )
 
     # Specify the actions to be executed
-    #move_cmd = Node(
-    #    package='rob_nav2',
-    #    executable='move_action_node',
-    #    name='move_action_node',
-    #    output='screen',
-    #    parameters = []
-    #)
+    move_cmd = Node(
+        package='rob_nav2',
+        executable='move_action_node',
+        name='move_action_node',
+        output='screen',
+        parameters = []
+    )
     
-    #find_lower_cmd = Node(
-    #    package='rob_nav2',
-    #    executable='find_lower_action_node',
-    #    name='find_lower_action_node',
-    #    output='screen',
-    #    parameters = []
-    #)
+    find_lowest_cmd = Node(
+        package='rob_nav2',
+        executable='find_lowest_action_node',
+        name='find_lowest_action_node',
+        output='screen',
+        parameters = []
+    )
 
-    #inspect_cmd = Node(
-    #    package='rob_nav2',
-    #    executable='inspect_action_node',
-    #    name='inspect_action_node',
-    #    output='screen',
-    #    parameters = []
-    #)
+    inspect_cmd = Node(
+        package='rob_nav2',
+        executable='inspect_action_node',
+        name='inspect_action_node',
+        output='screen',
+        parameters = []
+    )
     
 
     return LaunchDescription([
@@ -130,10 +130,10 @@ def generate_launch_description():
         aruco_node,
 
         # Planner actions % to activate!!
-        # plansys2_cmd,
-        # move_cmd,
-        # inspect_cmd,
-        # find_lower_cmd,
+        plansys2_cmd,
+        move_cmd,
+        inspect_cmd,
+        find_lowest_cmd,
 
         ExecuteProcess(
             cmd=['gazebo', '--verbose', default_world_path, '-s', 'libgazebo_ros_factory.so'],
@@ -145,12 +145,12 @@ def generate_launch_description():
         ),
 
         # Navigation actions with delay
-        TimerAction(
-            period=2.0,
-            actions=[slam_cmd]
-        ),
-        TimerAction(
-            period=2.0,
-            actions=[nav2_cmd]
-        ),
+        #TimerAction(
+        #    period=2.0,
+        #    actions=[slam_cmd]
+        #),
+        #TimerAction(
+        #    period=2.0,
+        #    actions=[nav2_cmd]
+        #),
     ])
