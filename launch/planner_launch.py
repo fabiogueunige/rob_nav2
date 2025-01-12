@@ -47,6 +47,14 @@ def generate_launch_description():
         output='screen',
         parameters = []
     )
+
+    controller_cmd = Node(
+        package='rob_nav2',
+        executable='planner_controller_node',
+        name='planner_controller_node',
+        output='screen',
+        parameters = []
+    )
     
 
     return LaunchDescription([
@@ -55,4 +63,6 @@ def generate_launch_description():
         move_cmd,
         inspect_cmd,
         find_lowest_cmd,
+        controller_cmd,
+
     ])
