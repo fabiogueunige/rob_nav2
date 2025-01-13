@@ -29,9 +29,15 @@ def generate_launch_description():
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{'robot_description': ParameterValue(Command(['xacro ', LaunchConfiguration('model')]), value_type=str)}]
+        parameters=[{'robot_description': ParameterValue(Command(['xacro ', default_model_path,
+                                                                  ' x:=', LaunchConfiguration('x'),
+                                                                  ' y:=', LaunchConfiguration('y'),
+                                                                  ' z:=', LaunchConfiguration('z'),
+                                                                  ' roll:=', LaunchConfiguration('roll'),
+                                                                  ' pitch:=', LaunchConfiguration('pitch'),
+                                                                  ' yaw:=', LaunchConfiguration('yaw')]), value_type=str)}]
     )
-    
+
     joint_state_publisher_node = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',

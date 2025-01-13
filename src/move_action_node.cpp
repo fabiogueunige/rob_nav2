@@ -39,8 +39,8 @@ public:
     wp.pose.position.z = 0.0;
     wp.pose.orientation.x = 0.0;
     wp.pose.orientation.y = 0.0;
-    wp.pose.orientation.z = 0.05;
-    wp.pose.orientation.w = 0.0;
+    wp.pose.orientation.z = 0.0;
+    wp.pose.orientation.w = 1.0;
     waypoints_["wp1"] = wp;
 
     wp.pose.position.x = -3.0;
@@ -55,9 +55,9 @@ public:
     wp.pose.position.y = -5.0;
     waypoints_["wp4"] = wp;
 
-    wp.pose.position.x = -0.0;
+    /*wp.pose.position.x = -0.0;
     wp.pose.position.y = 1.0;
-    waypoints_["wp_control"] = wp;
+    waypoints_["wp_control"] = wp;*/
 
     using namespace std::placeholders;
     pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovariance>(
