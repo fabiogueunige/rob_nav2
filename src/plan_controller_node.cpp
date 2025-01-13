@@ -17,15 +17,15 @@
 
 #include "std_msgs/msg/string.hpp"
 
-class PlannerController : public rclcpp::Node
+class PlanController : public rclcpp::Node
 {
 public:
-  PlannerController()
-  : rclcpp::Node("planner_controller"), state_(STARTING)
+  PlanController()
+  : rclcpp::Node("plan_controller"), state_(STARTING)
   {
     lowest_wp_ = "err";
     lowest_sub_ = this->create_subscription<std_msgs::msg::String>(
-      "/lowest_wp", 10, std::bind(&PlannerController::lowest_callback, this, std::placeholders::_1));
+      "/lowest_wp", 10, std::bind(&PlanController::lowest_callback, this, std::placeholders::_1));
   }
 
   void init()
@@ -58,7 +58,7 @@ public:
       case STARTING:
         {
           // Set the goal for next state
-          problem_expert_->setGoal(plansys2::Goal("(and(inspected franka wp1))"));
+          problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp1))")); // inspected franka wp1
 
           // Compute the plan
           auto domain = domain_expert_->getDomain();
@@ -79,6 +79,7 @@ public:
         break;
       case PATROL_WP1:
         {
+          break;
           auto feedback = executor_client_->getFeedBack();
           for (const auto & action_feedback : feedback.action_execution_status) {
               std::cout << "[" << action_feedback.action << " " <<
@@ -409,7 +410,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<PlannerController>();
+  auto node = std::make_shared<PlanController>();
 
   node->init();
 

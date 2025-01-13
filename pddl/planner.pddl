@@ -1,5 +1,5 @@
 (define (domain simple)
-    (:requirements :strips :typing :adl :fluents :durative-actions :universal-preconditions)
+    (:requirements :strips :typing :adl :fluents :durative-actions :universal-preconditions :negative-preconditions)
 
     ;; Types ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (:types
@@ -23,8 +23,6 @@
         :duration (= ?duration 60)
         :condition (and
             (at start (robot_at ?r ?wp1))
-            (at start (not (robot_at ?r ?wp2)))
-            (at start (not (visited ?r ?wp2)))
         )
         :effect (and
             (at start (not (robot_at ?r ?wp1)))
@@ -39,7 +37,6 @@
         :condition (and
             (at start (visited ?r ?wp))
             (over all (robot_at ?r ?wp))
-            (at start (not (inspected ?r ?wp)))
         )
         :effect (and
             (at end (inspected ?r ?wp))

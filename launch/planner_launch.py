@@ -50,8 +50,8 @@ def generate_launch_description():
 
     controller_cmd = Node(
         package='rob_nav2',
-        executable='planner_controller_node',
-        name='planner_controller_node',
+        executable='plan_controller_node',
+        name='plan_controller_node',
         output='screen',
         parameters = []
     )

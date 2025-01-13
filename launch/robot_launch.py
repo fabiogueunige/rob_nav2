@@ -16,8 +16,6 @@ def generate_launch_description():
     default_model_path = os.path.join(test_robot_description_share, 'urdf/robot_nav2.xacro')
     default_world_path = os.path.join(test_robot_description_share, 'worlds/assignment2.world')
     rviz_config_path = os.path.join(test_robot_description_share, 'config/rviz.rviz')
-    default_planner_path = os.path.join(test_robot_description_share, 'pddl/planner.pddl')
-    default_nav_path = os.path.join(test_robot_description_share, 'params', 'nav2_params.yaml')
 
     # Declare launch arguments with new default values
     declare_x_pos = DeclareLaunchArgument('x', default_value='0.0', description='X position of the robot')
@@ -61,60 +59,7 @@ def generate_launch_description():
         ],
         output='screen'
     )
-
-    plansys2_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('plansys2_bringup'),
-            'launch',
-            'plansys2_bringup_launch_monolithic.py')),
-        launch_arguments={'model_file': default_planner_path}.items()
-    )
-
-    nav2_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('nav2_bringup'),
-            'launch',
-            'navigation_launch.py')),
-        launch_arguments={
-            'autostart': 'true',
-            'use_sim_time': 'false',
-            'params_file': default_nav_path
-        }.items()
-    )
-
-    slam_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('slam_toolbox'),
-            'launch',
-            'online_sync_launch.py')),
-        launch_arguments={'use_sim_time': 'true'}.items()
-    )
-
-    # Specify the actions to be executed
-    move_cmd = Node(
-        package='rob_nav2',
-        executable='move_action_node',
-        name='move_action_node',
-        output='screen',
-        parameters = []
-    )
-    
-    find_lowest_cmd = Node(
-        package='rob_nav2',
-        executable='find_lowest_action_node',
-        name='find_lowest_action_node',
-        output='screen',
-        parameters = []
-    )
-
-    inspect_cmd = Node(
-        package='rob_nav2',
-        executable='inspect_action_node',
-        name='inspect_action_node',
-        output='screen',
-        parameters = []
-    )
-    
+ 
 
     return LaunchDescription([
         declare_x_pos,
@@ -129,12 +74,6 @@ def generate_launch_description():
         spawn_entity,
         aruco_node,
 
-        # Planner actions % to activate!!
-        plansys2_cmd,
-        move_cmd,
-        inspect_cmd,
-        find_lowest_cmd,
-
         ExecuteProcess(
             cmd=['gazebo', '--verbose', default_world_path, '-s', 'libgazebo_ros_factory.so'],
             output='screen'
@@ -144,13 +83,4 @@ def generate_launch_description():
             output='screen'
         ),
 
-        # Navigation actions with delay
-        #TimerAction(
-        #    period=2.0,
-        #    actions=[slam_cmd]
-        #),
-        #TimerAction(
-        #    period=2.0,
-        #    actions=[nav2_cmd]
-        #),
     ])

@@ -65,9 +65,11 @@ public:
       10,
       std::bind(&MoveAction::current_pos_callback, this, _1));
     
+    /*
     markers_order_service_ = create_service<rob_nav2::srv::MarkersOrder>(
       "/marker_order",
       std::bind(&MoveAction::handle_service, this, _1, _2));
+    */
   }
 
   void current_pos_callback(const geometry_msgs::msg::PoseWithCovariance::SharedPtr msg)
@@ -103,10 +105,10 @@ public:
 
     dist_to_move = getDistance(goal_pos_.pose, current_pos_);
 
-    if ( waypoint_order_.back() != wp_to_navigate )
+    /*if ( waypoint_order_.back() != wp_to_navigate )
     {
       waypoint_order_.push_back(wp_to_navigate);
-    }
+    }*/
 
     auto send_goal_options =
       rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
@@ -137,7 +139,7 @@ private:
       (pos1.position.y - pos2.position.y) * (pos1.position.y - pos2.position.y));
   }
 
-  void handle_service(
+  /*void handle_service(
     const std::shared_ptr<rob_nav2::srv::MarkersOrder::Request> request,
     std::shared_ptr<rob_nav2::srv::MarkersOrder::Response> response)
   {
@@ -148,6 +150,7 @@ private:
     }
     response->order = num;
   }
+  */
 
   void do_work()
   {
@@ -156,7 +159,7 @@ private:
   std::map<std::string, geometry_msgs::msg::PoseStamped> waypoints_;
   std::vector<std::string> waypoint_order_; // save the order of move
   // send the order of move to the marker_order service
-  rclcpp::Service<rob_nav2::srv::MarkersOrder>::SharedPtr markers_order_service_;
+  // rclcpp::Service<rob_nav2::srv::MarkersOrder>::SharedPtr markers_order_service_;
 
   using NavigationGoalHandle =
     rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>;

@@ -59,14 +59,14 @@ ament_target_dependencies(inspect_action_node ${dependencies})
 add_executable(find_lowest_action_node src/find_lowest_action_node.cpp)
 ament_target_dependencies(find_lowest_action_node ${dependencies})
 
-add_executable(planner_controller_node src/planner_controller_node.cpp)
-ament_target_dependencies(planner_controller_node ${dependencies})
+add_executable(plan_controller_node src/plan_controller_node.cpp)
+ament_target_dependencies(plan_controller_node ${dependencies})
 
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(move_action_node ${cpp_typesupport_target})
 target_link_libraries(inspect_action_node ${cpp_typesupport_target})
 target_link_libraries(find_lowest_action_node ${cpp_typesupport_target})
-target_link_libraries(planner_controller_node ${cpp_typesupport_target})
+target_link_libraries(plan_controller_node ${cpp_typesupport_target})
 
 # Installazione dei file
 install(DIRECTORY urdf worlds DESTINATION share/${PROJECT_NAME})
@@ -76,7 +76,7 @@ install(TARGETS
   move_action_node
   inspect_action_node
   find_lowest_action_node
-  planner_controller_node
+  plan_controller_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
