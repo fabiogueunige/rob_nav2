@@ -60,9 +60,20 @@ def generate_launch_description():
     return LaunchDescription([
         # Planner actions % to activate!!
         plansys2_cmd,
-        move_cmd,
-        inspect_cmd,
-        find_lowest_cmd,
-        controller_cmd,
-
+        TimerAction(
+            period=1.0,
+            actions=[move_cmd]
+        ),
+        TimerAction(
+            period=1.0,
+            actions=[inspect_cmd]
+        ),
+        TimerAction(
+            period=1.0,
+            actions=[find_lowest_cmd]
+        ),
+        TimerAction(
+            period=1.5,
+            actions=[controller_cmd]
+        )
     ])

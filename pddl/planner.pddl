@@ -20,7 +20,7 @@
     ;; Actions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (:durative-action move
         :parameters (?r - robot ?wp1 ?wp2 - waypoint)
-        :duration (= ?duration 60)
+        :duration (= ?duration 1)
         :condition (and
             (at start (robot_at ?r ?wp1))
         )

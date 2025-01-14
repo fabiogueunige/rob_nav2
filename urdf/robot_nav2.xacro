@@ -4,12 +4,6 @@
 					
 	<xacro:property name="length_wheel" value="0.04" />
 	<xacro:property name="radius_wheel" value="0.1" />
-  <xacro:property name="x" value="0.0"/>
-  <xacro:property name="y" value="0.0"/>
-  <xacro:property name="z" value="0.1"/>
-  <xacro:property name="roll" value="0.0"/>
-  <xacro:property name="pitch" value="0.0"/>
-  <xacro:property name="yaw" value="0.0"/>
 
 	<xacro:macro name="default_inertial" params="mass">
                <inertial>
@@ -53,7 +47,7 @@
 
 	  <link name="link_chassis">
     <!-- pose and inertial -->
-    <pose>{x} ${y} ${z} ${roll} ${pitch} ${yaw}</pose>
+    <pose>0 0 0.1 0 0 0</pose>
     <inertial>
       <mass value="5"/>
       <origin rpy="0 0 0" xyz="0 0 0.1"/>
@@ -158,7 +152,7 @@
   
   <joint name="camera_joint" type="fixed">
 	    <axis xyz="0 1 0" />
-	    <origin xyz="0.23 0 0.235" rpy="0 0 0"/>
+	    <origin xyz="0.23 0 0.1" rpy="0 0 0"/>
 	    <parent link="link_chassis"/>
 	    <child link="camera_link"/> 
 	 </joint>

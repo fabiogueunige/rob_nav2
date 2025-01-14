@@ -17,6 +17,7 @@
   <depend>geometry_msgs</depend>
   <depend>nav2_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>nsv_msgs</depend>
   <depend>plansys2_domain_expert</depend>
   <depend>plansys2_executor</depend>
   <depend>plansys2_planner</depend>

@@ -1,9 +1,17 @@
-/*
-move action node
-Publisher: /cmd_vel
-Subscriber: /odom
+// Copyright 2019 Intelligent Robotics Lab
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-*/
 #include <math.h>
 
 #include <memory>
@@ -13,9 +21,8 @@ Subscriber: /odom
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
-#include "rob_nav2/srv/markers_order.hpp"
 
 #include "plansys2_executor/ActionExecutorClient.hpp"
 
@@ -24,57 +31,50 @@ Subscriber: /odom
 
 using namespace std::chrono_literals;
 
-
 class MoveAction : public plansys2::ActionExecutorClient
 {
 public:
   MoveAction()
-  : plansys2::ActionExecutorClient("move", 500ms)
+  : plansys2::ActionExecutorClient("move", 1s)
   {
     geometry_msgs::msg::PoseStamped wp;
     wp.header.frame_id = "map";
     wp.header.stamp = now();
     wp.pose.position.x = -7.0;
-    wp.pose.position.y = -1.5;
+    wp.pose.position.y = 1.5;
     wp.pose.position.z = 0.0;
     wp.pose.orientation.x = 0.0;
     wp.pose.orientation.y = 0.0;
     wp.pose.orientation.z = 0.0;
     wp.pose.orientation.w = 1.0;
-    waypoints_["wp1"] = wp;
-
-    wp.pose.position.x = -3.0;
-    wp.pose.position.y = -8.0;
-    waypoints_["wp2"] = wp;
+    waypoints_["wp4"] = wp;
 
     wp.pose.position.x = 6.0;
     wp.pose.position.y = 2.0;
+    waypoints_["wp1"] = wp;
+
+    wp.pose.position.x = -2.0;
+    wp.pose.position.y = -7.5;
     waypoints_["wp3"] = wp;
 
     wp.pose.position.x = 7.0;
     wp.pose.position.y = -5.0;
-    waypoints_["wp4"] = wp;
+    waypoints_["wp2"] = wp;
 
-    /*wp.pose.position.x = -0.0;
-    wp.pose.position.y = 1.0;
-    waypoints_["wp_control"] = wp;*/
+    wp.pose.position.x = 2.0;
+    wp.pose.position.y = 2.0;
+    waypoints_["wp_control"] = wp;
 
     using namespace std::placeholders;
-    pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovariance>(
-      "/odom",
+    pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+      "/amcl_pose",
       10,
       std::bind(&MoveAction::current_pos_callback, this, _1));
-    
-    /*
-    markers_order_service_ = create_service<rob_nav2::srv::MarkersOrder>(
-      "/marker_order",
-      std::bind(&MoveAction::handle_service, this, _1, _2));
-    */
   }
 
-  void current_pos_callback(const geometry_msgs::msg::PoseWithCovariance::SharedPtr msg)
+  void current_pos_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
   {
-    current_pos_ = msg->pose;
+    current_pos_ = msg->pose.pose;
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -105,11 +105,6 @@ public:
 
     dist_to_move = getDistance(goal_pos_.pose, current_pos_);
 
-    /*if ( waypoint_order_.back() != wp_to_navigate )
-    {
-      waypoint_order_.push_back(wp_to_navigate);
-    }*/
-
     auto send_goal_options =
       rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
 
@@ -123,7 +118,7 @@ public:
 
     send_goal_options.result_callback = [this](auto) {
         finish(true, 1.0, "Move completed");
-      };
+    };
 
     future_navigation_goal_handle_ =
       navigation_action_client_->async_send_goal(navigation_goal_, send_goal_options);
@@ -139,27 +134,19 @@ private:
       (pos1.position.y - pos2.position.y) * (pos1.position.y - pos2.position.y));
   }
 
-  /*void handle_service(
-    const std::shared_ptr<rob_nav2::srv::MarkersOrder::Request> request,
-    std::shared_ptr<rob_nav2::srv::MarkersOrder::Response> response)
-  {
-    int val = waypoint_order_.size();
-    std::vector<int> num(val);
-    for (int i = 0; i < waypoint_order_.size(); i++) {
-      num[i] = std::stoi(waypoint_order_[i].substr(2)); // Assuming "wp" prefix
-    }
-    response->order = num;
-  }
-  */
-
   void do_work()
   {
+
+    dist_to_move = getDistance(goal_pos_.pose, current_pos_);
+    std::cout << "dist_to_move" << std::endl;
+
+    if (dist_to_move < 0.8) {
+      send_feedback(1.0, "Move completed");
+      finish(true, 1.0, "Move completed");
+    }
   }
 
   std::map<std::string, geometry_msgs::msg::PoseStamped> waypoints_;
-  std::vector<std::string> waypoint_order_; // save the order of move
-  // send the order of move to the marker_order service
-  // rclcpp::Service<rob_nav2::srv::MarkersOrder>::SharedPtr markers_order_service_;
 
   using NavigationGoalHandle =
     rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>;
@@ -170,7 +157,7 @@ private:
   std::shared_future<NavigationGoalHandle::SharedPtr> future_navigation_goal_handle_;
   NavigationGoalHandle::SharedPtr navigation_goal_handle_;
 
-  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovariance>::SharedPtr pos_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pos_sub_;
   geometry_msgs::msg::Pose current_pos_;
   geometry_msgs::msg::PoseStamped goal_pos_;
   nav2_msgs::action::NavigateToPose::Goal navigation_goal_;

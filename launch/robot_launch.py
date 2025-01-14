@@ -14,7 +14,7 @@ from launch.actions import TimerAction
 def generate_launch_description():
     test_robot_description_share = FindPackageShare(package='rob_nav2').find('rob_nav2')
     default_model_path = os.path.join(test_robot_description_share, 'urdf/robot_nav2.xacro')
-    default_world_path = os.path.join(test_robot_description_share, 'worlds/assignment2.world')
+    default_world_path = os.path.join(test_robot_description_share, 'worlds/ass2_new.world')
     rviz_config_path = os.path.join(test_robot_description_share, 'config/rviz.rviz')
 
     # Declare launch arguments with new default values
@@ -29,15 +29,9 @@ def generate_launch_description():
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{'robot_description': ParameterValue(Command(['xacro ', default_model_path,
-                                                                  ' x:=', LaunchConfiguration('x'),
-                                                                  ' y:=', LaunchConfiguration('y'),
-                                                                  ' z:=', LaunchConfiguration('z'),
-                                                                  ' roll:=', LaunchConfiguration('roll'),
-                                                                  ' pitch:=', LaunchConfiguration('pitch'),
-                                                                  ' yaw:=', LaunchConfiguration('yaw')]), value_type=str)}]
+        parameters=[{'robot_description': ParameterValue(Command(['xacro ', LaunchConfiguration('model')]), value_type=str)}]
     )
-
+    
     joint_state_publisher_node = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
@@ -55,25 +49,13 @@ def generate_launch_description():
         executable='spawn_entity.py',
         arguments=[
             '-entity', 'my_test_robot',
-            '-topic', '/robot_description',
-            '-x', LaunchConfiguration('x'),
-            '-y', LaunchConfiguration('y'),
-            '-z', LaunchConfiguration('z'),
-            '-R', LaunchConfiguration('roll'),
-            '-P', LaunchConfiguration('pitch'),
-            '-Y', LaunchConfiguration('yaw')
+            '-topic', '/robot_description',           
         ],
         output='screen'
     )
  
 
     return LaunchDescription([
-        declare_x_pos,
-        declare_y_pos,
-        declare_z_pos,
-        declare_roll,
-        declare_pitch,
-        declare_yaw,
         DeclareLaunchArgument(name='model', default_value=default_model_path, description='Absolute path to robot urdf file'),
         robot_state_publisher_node,
         joint_state_publisher_node,
