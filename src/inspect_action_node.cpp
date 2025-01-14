@@ -1,25 +1,29 @@
 /*
-inspection node
-Publisher: /cmd_vel
-Subscriber: /aruco_markers
-Service: /marker_ids
-*/
+- Subscriber to aruco node: "/aruco_markers"
+- Save the index of the marker with the lowest id: index_
+- Publish index_ to: "/lowest_id_at"
+*/ 
 #include <memory>
-#include <geometry_msgs/msg/pose.hpp>
-#include <geometry_msgs/msg/pose_array.hpp>
-#include <ros2_aruco_interfaces/msg/aruco_markers.hpp>
-#include <sensor_msgs/msg/image.hpp>
+
 #include "geometry_msgs/msg/twist.hpp"
+
 #include "plansys2_executor/ActionExecutorClient.hpp"
-#include "rob_nav2/srv/marker_ids.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
+#include <vector>
+#include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/pose_array.hpp"
+#include "sensor_msgs/msg/image.hpp"
+#include "ros2_aruco_interfaces/msg/aruco_markers.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/int32.hpp"
+#include <string>
+
 using namespace std::chrono_literals;
 
-#define MAX_ARUCO_IDS 4
 class Inspect : public plansys2::ActionExecutorClient
 {
 public:
@@ -27,30 +31,50 @@ public:
   : plansys2::ActionExecutorClient("inspect", 1s)
   {
     using namespace std::placeholders;
+
+    // initialization of the subscriber to the aruco node
     aruco_sub_ = create_subscription<ros2_aruco_interfaces::msg::ArucoMarkers>(
       "/aruco_markers",
       10,
-      std::bind(&Inspect::aruco_callback, this, _1));
+      std::bind(&MoveAction::aruco_callback, this, _1));
+    // initialization of the publisher for the index of the marker with the lowest id
+    lowest_id_publisher_ = this->create_publisher<std_msgs::msg::Int32>("/lowest_id_at", 10);
 
-    marker_ids_service_ = create_service<rob_nav2::srv::MarkerIds>(
-      "/marker_ids",
-      std::bind(&Inspect::handle_service, this, _1, _2));
+    // index of the marker with the lowest id
+    index_ = 0;
+
   }
 
-  void aruco_callback(const ros2_aruco_interfaces::msg::ArucoMarkers::SharedPtr msg_marker)
-  {
-    int tmp = msg_marker->marker_ids.back();
-    for (int i = 0; i < MAX_ARUCO_IDS; i++)
+  
+    void aruco_callback(const ros2_aruco_interfaces::msg::Aruco_markers::SharedPtr msg)
     {
-      if (tmp == aruco_ids_ [i])
-      {
-        return ;
-      }           
+      int skip_aruco = 0;
+      // control that id is not already in the vector
+      for (int i = 0; i < marker_ids_.size(); i++) {
+        if (marker_ids_[i] == msg->marker_ids.back()) {
+          // if the id is already in the vector, skip it
+          skip_aruco = 1;
+        }
+      }
+      // if the id is not already in the vector, add it
+      if (skip_aruco == 0) {
+        marker_ids_.push_back(msg->marker_ids.back());
+        // find lowest id
+        for (int j = index_; j<marker_ids_.size(); j++) {
+          if (marker_ids_[j] < marker_ids_[index_]) {
+            // index of the marker with the lowest id
+            index_ = j;
+            // publish the index
+            auto message = std_msgs::msg::Int32();
+            message.data = index_;
+            lowest_id_publisher_->publish(message);
+          }
+        }
+        // set progress to 1.0 to finish the action
+          progress_ = 1.0
+      }
+      
     }
-    aruco_ids_.push_back(tmp);
-    progress_ = 1.0;
-    // do_work();
-  }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_activate(const rclcpp_lifecycle::State & previous_state)
@@ -72,20 +96,10 @@ public:
   }
 
 private:
-  void handle_service(
-    const std::shared_ptr<rob_nav2::srv::MarkerIds::Request> /*request*/,
-    std::shared_ptr<rob_nav2::srv::MarkerIds::Response> response)
-    {
-      response->marker_ids = aruco_ids_;
-    }
-
-
-
   void do_work()
   {
     if (progress_ < 1.0) {
-
-      send_feedback(progress_, "aligning running");
+      send_feedback(progress_, "aligning with aruco...");
 
       geometry_msgs::msg::Twist cmd;
       cmd.linear.x = 0.0;
@@ -107,18 +121,20 @@ private:
 
       cmd_vel_pub_->publish(cmd);
 
-      finish(true, progress_, "Inspection completed");
+      finish(true, 1.0, "Inspection completed");
     }
   }
 
-  float progress_;
-
-  rclcpp::Service<rob_nav2::srv::MarkerIds>::SharedPtr marker_ids_service_;
-
-  std::vector<int> aruco_ids_;
+  // subscribtion to Aruco Node
   rclcpp::Subscription<ros2_aruco_interfaces::msg::ArucoMarkers>::SharedPtr aruco_sub_;
-  
+  // publisher for the index of the marker with the lowest id
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr lowest_id_publisher_;
+  // publisher on topic "/cmd_vel"
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+
+  float progress_;
+  // index of the marker with the lowest id
+  int index_;
 };
 
 int main(int argc, char ** argv)
@@ -135,4 +151,3 @@ int main(int argc, char ** argv)
 
   return 0;
 }
-

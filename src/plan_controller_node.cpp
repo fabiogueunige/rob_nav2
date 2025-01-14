@@ -14,7 +14,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-
 #include "std_msgs/msg/string.hpp"
 
 class PlanController : public rclcpp::Node
@@ -23,9 +22,10 @@ public:
   PlanController()
   : rclcpp::Node("plan_controller"), state_(STARTING)
   {
-    lowest_wp_ = "err";
-    lowest_sub_ = this->create_subscription<std_msgs::msg::String>(
-      "/lowest_wp", 10, std::bind(&PlanController::lowest_callback, this, std::placeholders::_1));
+    lowest_id_subscriber_ = this->create_subscription<std_msgs::msg::Int32>(
+      "/lowest_id_at",
+      10,
+      std::bind(&PlannerControllerNode::lowestIdCallback, this, std::placeholders::_1));
   }
 
   void init()
@@ -58,7 +58,7 @@ public:
       case STARTING:
         {
           // Set the goal for next state
-          problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp1))")); // inspected franka wp1
+          problem_expert_->setGoal(plansys2::Goal("(and(inspected franka wp1))")); // inspected franka wp1
 
           // Compute the plan
           auto domain = domain_expert_->getDomain();
@@ -79,7 +79,7 @@ public:
         break;
       case PATROL_WP1:
         {
-          break;
+        
           auto feedback = executor_client_->getFeedBack();
           for (const auto & action_feedback : feedback.action_execution_status) {
               std::cout << "[" << action_feedback.action << " " <<
@@ -272,10 +272,10 @@ public:
               std::cout << "Successful finished " << std::endl;
 
               // Cleanning up
-              // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp4)"));
+              problem_expert_->removePredicate(plansys2::Predicate("(visited franka " + lowest_id_ + ")"));
 
               // Set the goal for next state
-              problem_expert_->setGoal(plansys2::Goal("(and(lowest_found))"));
+              problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka " + lowest_id_ + "))"));
 
               // Compute the plan
               auto domain = domain_expert_->getDomain();
@@ -332,32 +332,11 @@ public:
           if (!executor_client_->execute_and_check_plan() && executor_client_->getResult()) {
             if (executor_client_->getResult().value().success) {
               std::cout << "Successful finished "<< std::endl;
-
-              // Cleanning up
-              // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp4)"));
-
-              // Set the goal for next state
-              if (lowest_wp_ == "err") {
-                lowest_wp_ = "wp1"; // default value to avoid errors
-              }
-              problem_expert_->removePredicate(plansys2::Predicate("(visited franka " + lowest_wp_ + ")"));
-              lowest_wp_ = "(and(at_robot franka " + lowest_wp_ + "))";
-              problem_expert_->setGoal(plansys2::Goal(lowest_wp_));
-
-              // Compute the plan
-              auto domain = domain_expert_->getDomain();
-              auto problem = problem_expert_->getProblem();
-              auto plan = planner_client_->getPlan(domain, problem);
-
-              if (!plan.has_value()) {
-                std::cout << "Could not find plan to reach goal " <<
-                  parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
                 break;
               }
 
               // Execute the plan
               if (executor_client_->start_plan_execution(plan.value())) {
-                // Loop to WP1
                 state_ = TO_LOWEST;
               }
             } else {
@@ -391,20 +370,22 @@ public:
   }
 
 private:
+  void lowestIdCallback(const std_msgs::msg::Int32::SharedPtr msg)
+  {
+    RCLCPP_INFO(this->get_logger(), "Received lowest ID: %d", msg->data);
+    lowest_id_ = msg->data;
+  }
+
   typedef enum {STARTING, PATROL_WP1, PATROL_WP2, PATROL_WP3, PATROL_WP4, TO_LOWEST} StateType;
   StateType state_;
-
-  void lowest_callback(const std_msgs::msg::String::SharedPtr msg)
-  {
-    lowest_wp_ = msg->data;
-  }
   
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr lowest_sub_;
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
   std::shared_ptr<plansys2::PlannerClient> planner_client_;
   std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
   std::shared_ptr<plansys2::ExecutorClient> executor_client_;
-  std::string lowest_wp_;
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr lowest_id_subscriber_;
+  int lowest_id_;
 };
 
 int main(int argc, char ** argv)
