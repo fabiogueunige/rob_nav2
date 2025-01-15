@@ -73,7 +73,7 @@ pip install opencv-contrib-python==4.5.4.60 opencv-python==4.5.4.60
 ## Robot and World
 Prerequisites for launch the part related to robot and world
 
-### Aruco 
+### Aruco Markers
 In this project we will use the Aruco library so is need to have this package inside the `scr` foder of your workspace 
 
 ``` bash
