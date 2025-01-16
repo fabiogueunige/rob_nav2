@@ -58,6 +58,7 @@ public:
     {
     case STARTING:
     {
+      std::cout << "Starting Case" << std::endl;
       // Set the goal for next state
       problem_expert_->setGoal(plansys2::Goal("(and(inspected franka wp1))")); // inspected franka wp1
 
@@ -81,6 +82,7 @@ public:
     break;
     case PATROL_WP1:
     {
+      std::cout << "patrol WP1 Case" << std::endl;
 
       auto feedback = executor_client_->getFeedBack();
       for (const auto &action_feedback : feedback.action_execution_status)
@@ -93,6 +95,7 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
+          reached_wp1 = 1;
           std::cout << "dist_to_move finished " << std::endl;
 
           // Cleanning up
@@ -115,7 +118,7 @@ public:
           // Execute the plan
           if (executor_client_->start_plan_execution(plan.value()))
           {
-            state_ = PATROL_WP2;
+            state_ = PATROL_WP4;
           }
         }
         else
@@ -279,47 +282,65 @@ public:
     break;
     case PATROL_WP4:
     {
+      // Cleanning up
+      //problem_expert_->removePredicate(plansys2::Predicate("(visited franka " + lowest_wp_ + ")"));
+
       auto feedback = executor_client_->getFeedBack();
 
       for (const auto &action_feedback : feedback.action_execution_status)
       {
         std::cout << "[" << action_feedback.action << " " << action_feedback.completion * 100.0 << "%]";
       }
-      std::cout << std::endl;
+      std::cout << "patrol WP4 Case" << std::endl;
+
 
       if (!executor_client_->execute_and_check_plan() && executor_client_->getResult())
       {
         if (executor_client_->getResult().value().success)
         {
+          reached_wp2 = 1;
+          reached_wp1 = 0;
           std::cout << "Successful finished " << std::endl;
 
           // Cleanning up
           // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp4)"));
-          if (lowest_id_ == 1)
+          // print the lowest id recived
+           
+          std::cout << "Lowest Id: " << lowest_id_ << std::endl;
+
+          if (lowest_id_ == 0)
           {
-            lowest_wp_ = "wp4";
+            if (reached_wp1 == 1){
+              break;
+            }
+            problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp1))"));
+            std::cout << "goal:wp4 " << lowest_id_ << std::endl;
+          }
+          else if (lowest_id_ == 1)
+          {
+            if (reached_wp2 == 1){
+              break;
+            }
+
+            problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp2))"));
+            std::cout << "goal " << lowest_id_ << std::endl;
+
           }
           else if (lowest_id_ == 2)
           {
-            lowest_wp_ = "wp1";
+            problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp3))"));
           }
           else if (lowest_id_ == 3)
           {
-            lowest_wp_ = "wp3";
-          }
-          else if (lowest_id_ == 4)
-          {
-            lowest_wp_ = "wp2";
+            problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp4))"));
           }
           else
           {
-            lowest_wp_ = "err";
+            lowest_wp_ = "robot_at franka err";
           }
-          // Cleanning up
-          problem_expert_->removePredicate(plansys2::Predicate("(visited franka " + lowest_wp_ + ")"));
-
+        
           // Set the goal for next state
-          problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka " + lowest_wp_ + "))"));
+          //problem_expert_->setGoal(plansys2::Goal("(and(lowest_wp_))"));
           // Compute the plan
           auto domain = domain_expert_->getDomain();
           auto problem = problem_expert_->getProblem();
@@ -334,7 +355,7 @@ public:
           // Execute the plan
           if (executor_client_->start_plan_execution(plan.value()))
           {
-            // Loop to WP1
+            // Loop to WP4
             state_ = TO_LOWEST;
           }
         }
@@ -364,8 +385,11 @@ public:
         }
       }
     }
+    break;
     case TO_LOWEST:
     {
+
+      std::cout << "TO_LOWEST Case" << std::endl;
 
       auto feedback = executor_client_->getFeedBack();
 
@@ -429,7 +453,9 @@ private:
   void lowestIdCallback(const std_msgs::msg::Int32::SharedPtr msg)
   {
     RCLCPP_INFO(this->get_logger(), "Received lowest ID: %d", msg->data);
+
     lowest_id_ = msg->data;
+    std::cout << "Callback LowestId recived: " << lowest_id_ << std::endl;  
   }
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr lowest_sub_;
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
@@ -439,6 +465,10 @@ private:
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr lowest_id_subscriber_;
   int lowest_id_;
   std::string lowest_wp_;
+  int reached_wp1 = 0;
+  int reached_wp2 = 0;
+  int reached_wp3 = 0;
+  int reached_wp4 = 0;
 };
 
 int main(int argc, char **argv)

@@ -25,9 +25,8 @@
             (at start (robot_at ?r ?wp1))
         )
         :effect (and
-            (at start (not (robot_at ?r ?wp1)))
             (at end (robot_at ?r ?wp2))
-            (at end (visited ?r ?wp2))
+            (at end (not (robot_at ?r ?wp1)))
         )
     )
 
@@ -35,8 +34,7 @@
         :parameters (?r - robot ?wp - waypoint)
         :duration (= ?duration 1)
         :condition (and
-            (at start (visited ?r ?wp))
-            (over all (robot_at ?r ?wp))
+            (at start (robot_at ?r ?wp))
         )
         :effect (and
             (at end (inspected ?r ?wp))

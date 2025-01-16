@@ -67,6 +67,9 @@ public:
           auto message = std_msgs::msg::Int32();
           message.data = index_;
           lowest_id_publisher_->publish(message);
+          std::cout << "Lowest marker number: " << index_ << std::endl;
+
+
         }
       }
       // set progress to 1.0 to finish the action

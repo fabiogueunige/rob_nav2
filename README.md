@@ -1,5 +1,5 @@
 # Rob_nav2
-Inside rob_nav2 there is all the code developed for the assigment of Experimantal Robotics course of Robotic Engeneering master degree at the University of Genoa by the students: Andrea Chiappe, Alberto Di Donna, Fabio Guelfi and Samuele Viola.
+Inside rob_nav2 there is all the code developed for the assigment of Experimantal Robotics course of Robotic Engeneering master degree at the University of Genoa by the students: Andrea Chiappe, Alberto Di Donna and Fabio Guelfi.
 
 # Download 
 
