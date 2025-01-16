@@ -66,7 +66,7 @@ private:
     }
     else if (msg->data.size() == 1 || (msg->data.size() == result_ids_.size() + 1))
     {
-      std::cout<<"Pushback"<<std::endl;
+      std::cout<<"Value in find_lowest"<<std::endl;
       result_ids_.push_back(msg->data.back());
     }
     else if (msg->data.size() == result_ids_.size() || (msg->data.size() > result_ids_.size() + 1))
@@ -76,8 +76,7 @@ private:
     }
     else 
     {
-      std::cout<< "Received vector size is not correct"<<std::endl;
-      RCLCPP_ERROR(get_logger(), "Received vector size is not correct");
+      std::cout<< "Received vector size is strange "<<msg->data.size()<<std::endl;
     }
     check_id();
   }

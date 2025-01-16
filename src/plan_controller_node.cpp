@@ -95,10 +95,7 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          std::cout << "dist_to_move finished " << std::endl;
-
-          // Cleanning up
-          // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp1)"));
+          std::cout << "Inspected wp1 " << std::endl;
 
           // Set the goal for next state
           problem_expert_->setGoal(plansys2::Goal("(and(inspected franka wp2))"));
@@ -129,6 +126,8 @@ public:
               std::cout << "[" << action_feedback.action << "] finished with error: " << action_feedback.message_status << std::endl;
             }
           }
+          // Cleaning up
+          problem_expert_->removePredicate(plansys2::Predicate("(visited franka wp1)"));
 
           // Replan
           auto domain = domain_expert_->getDomain();
@@ -137,7 +136,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Unsuccessful replan attempt to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Unsuccessful replan attempt to reach goal wp1 " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -161,10 +160,7 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          std::cout << "Successful finished " << std::endl;
-
-          // Cleanning up
-          // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp2)"));
+          std::cout << "Successful inspected wp2 " << std::endl;
 
           // Set the goal for next state
           problem_expert_->setGoal(plansys2::Goal("(and(inspected franka wp3))"));
@@ -176,7 +172,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Could not find plan to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Could not find plan to reach goal wp2 " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -195,6 +191,8 @@ public:
               std::cout << "[" << action_feedback.action << "] finished with error: " << action_feedback.message_status << std::endl;
             }
           }
+          // Cleaning up
+          problem_expert_->removePredicate(plansys2::Predicate("(visited franka wp2)"));
 
           // Replan
           auto domain = domain_expert_->getDomain();
@@ -203,7 +201,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Unsuccessful replan attempt to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Unsuccessful replan attempt to reach goal wp2" << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -227,10 +225,7 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          std::cout << "Successful finished " << std::endl;
-
-          // Cleanning up
-          // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp3)"));
+          std::cout << "Successful inspected wp3" << std::endl;
 
           // Set the goal for next state
           problem_expert_->setGoal(plansys2::Goal("(and(inspected franka wp4))"));
@@ -242,7 +237,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Could not find plan to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Could not find plan to reach goal wp4" << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -261,6 +256,9 @@ public:
               std::cout << "[" << action_feedback.action << "] finished with error: " << action_feedback.message_status << std::endl;
             }
           }
+          
+          // Cleaning up
+          problem_expert_->removePredicate(plansys2::Predicate("(visited franka wp3)"));
 
           // Replan
           auto domain = domain_expert_->getDomain();
@@ -269,7 +267,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Unsuccessful replan attempt to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Unsuccessful replan attempt to reach goal wp3" << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -293,7 +291,7 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          std::cout << "Successful finished " << std::endl;
+          std::cout << "Successful inspected wp4 " << std::endl;
           
           // To go to lowest waypoint
           problem_expert_->addPredicate(plansys2::Predicate("(all_inspected franka)")); 
@@ -307,7 +305,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Could not find plan to reach lowest goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Could not find plan to find lowest goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -327,6 +325,9 @@ public:
             }
           }
 
+          // Cleaning up
+          problem_expert_->removePredicate(plansys2::Predicate("(visited franka wp4)"));
+
           // Replan
           auto domain = domain_expert_->getDomain();
           auto problem = problem_expert_->getProblem();
@@ -334,7 +335,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Unsuccessful replan attempt to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Unsuccessful replan attempt to reach goal wp4" << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -368,8 +369,7 @@ public:
           {
             lowest_wp_ = "err";
           }
-          // Cleanning up
-          problem_expert_->removePredicate(plansys2::Predicate("(visited franka " + lowest_wp_ + ")"));
+          std::cout << lowest_wp_ << std::endl;
 
           // Set the goal for next state
           problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka " + lowest_wp_ + "))"));

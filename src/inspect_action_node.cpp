@@ -42,8 +42,14 @@ public:
   void aruco_callback(const ros2_aruco_interfaces::msg::ArucoMarkers::SharedPtr msg)
   {
     // control that id is not already in the vector
+    
+    if (!active_) // if the action is not active, do not process the message
+    {
+      return;
+    }
+    // check if the marker id is already in the vector
     auto it = std::find(marker_ids_.begin(), marker_ids_.end(), msg->marker_ids.back());
-    if (it != marker_ids_.end())
+    if (it != marker_ids_.end()) // already inside
     {
       if (msg->marker_ids.back() == marker_ids_.back())
       {
@@ -53,27 +59,31 @@ public:
       else if (marker_ids_.size() >= 4)
       {
         marker_ids_.erase(it);
+        std::cout << "Superato dimensione e diverso" << std::endl;
+        return ;
       }
     }
     else // == end
     {
       marker_ids_.push_back(msg->marker_ids.back());
       // send the vector message 
-      std_msgs::msg::Int32MultiArray msg;
-      msg.data = marker_ids_;
-      lowest_id_publisher_->publish(msg);
       std::cout << "Marker id: " << marker_ids_.back() << std::endl;
       std::cout << "Marker id: " << marker_ids_.back() << std::endl;
       // set progress to 1.0 to finish the action
       progress_ = 1.0;
+      active_ = false;
     }
+    std_msgs::msg::Int32MultiArray msg_val;
+    msg_val.data = marker_ids_;
+    lowest_id_publisher_->publish(msg_val);   
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_activate(const rclcpp_lifecycle::State &previous_state)
   {
     progress_ = 0.0;
-
+    active_ = true;
+    start_time_ = this->now();
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
     cmd_vel_pub_->on_activate();
 
@@ -94,6 +104,8 @@ private:
     if (progress_ < 1.0)
     {
 
+      
+
       send_feedback(progress_, "aligning running");
 
       geometry_msgs::msg::Twist cmd;
@@ -102,10 +114,21 @@ private:
       cmd.linear.z = 0.0;
       cmd.angular.x = 0.0;
       cmd.angular.y = 0.0;
-      cmd.angular.z = 0.8;
 
+      auto current_time = this->now();
+      auto duration = current_time - start_time_;
+      if (duration > rclcpp::Duration(40s))
+      {     
+        cmd.angular.z = 0.0;
 
-      cmd_vel_pub_->publish(cmd);
+        cmd_vel_pub_->publish(cmd);
+        active_ = true; // may be inspect problem
+        finish(false, progress_, "Action timed out");
+      }
+      else {
+        cmd.angular.z = 0.8;
+        cmd_vel_pub_->publish(cmd);
+      }
     }
     else
     {
@@ -124,7 +147,7 @@ private:
   }
 
   float progress_;
-
+  rclcpp::Time start_time_;
   // vector of aruco ids
   std::vector<int32_t> marker_ids_;
   rclcpp::Subscription<ros2_aruco_interfaces::msg::ArucoMarkers>::SharedPtr aruco_sub_;
@@ -134,6 +157,7 @@ private:
   rclcpp::Publisher<std_msgs::msg::Int32MultiArray>::SharedPtr lowest_id_publisher_;
   // index of the marker with the lowest id
   int index_;
+  bool active_;
 };
 
 int main(int argc, char **argv)
