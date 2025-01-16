@@ -14,7 +14,9 @@ from launch.actions import TimerAction
 def generate_launch_description():
     test_robot_description_share = FindPackageShare(package='rob_nav2').find('rob_nav2')
     default_model_path = os.path.join(test_robot_description_share, 'urdf/robot_nav2.xacro')
+    # Debug world
     default_world_path = os.path.join(test_robot_description_share, 'worlds/ass2_new.world')
+    # default_world_path = os.path.join(test_robot_description_share, 'worlds/assignment2.world')
     rviz_config_path = os.path.join(test_robot_description_share, 'config/rviz.rviz')
 
     # Declare launch arguments with new default values
@@ -49,13 +51,25 @@ def generate_launch_description():
         executable='spawn_entity.py',
         arguments=[
             '-entity', 'my_test_robot',
-            '-topic', '/robot_description',           
+            '-topic', '/robot_description',
+            # '-x', LaunchConfiguration('x'),
+            # '-y', LaunchConfiguration('y'),
+            # '-z', LaunchConfiguration('z'),
+            # '-R', LaunchConfiguration('roll'),
+            # '-P', LaunchConfiguration('pitch'),
+            # '-Y', LaunchConfiguration('yaw')
         ],
         output='screen'
     )
  
 
     return LaunchDescription([
+        # declare_x_pos,
+        # declare_y_pos,
+        # declare_z_pos,
+        # declare_roll,
+        # declare_pitch,
+        # declare_yaw,
         DeclareLaunchArgument(name='model', default_value=default_model_path, description='Absolute path to robot urdf file'),
         robot_state_publisher_node,
         joint_state_publisher_node,

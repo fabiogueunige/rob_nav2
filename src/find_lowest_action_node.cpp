@@ -20,8 +20,7 @@ Client: /marker_ids
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "rob_nav2/srv/marker_ids.hpp"
-#include "rob_nav2/srv/markers_order.hpp"
+#include "std_msgs/msg/int32_multi_array.hpp"
 
 
 using namespace std::chrono_literals;
@@ -34,38 +33,19 @@ public:
   {
     using namespace std::placeholders;
 
-    markers_order_client_ = this->create_client<rob_nav2::srv::MarkersOrder>("/markers_order");
-    marker_ids_client_ = this->create_client<rob_nav2::srv::MarkerIds>("/marker_ids");
-    request_order = std::make_shared<rob_nav2::srv::MarkersOrder::Request>();
-    request_ids = std::make_shared<rob_nav2::srv::MarkerIds::Request>();
+    result_index_ = 0;
+    result_val_ = 1000;
+    vect_sub_ = create_subscription<std_msgs::msg::Int32MultiArray>(
+      "/vect_id", 
+      10, 
+      std::bind(&FindLowest::vect_callback, this, _1));
+
     lowest_publisher_ = this->create_publisher<std_msgs::msg::String>("/lowest_wp", 10);
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_activate(const rclcpp_lifecycle::State & previous_state)
   {
-    while (!markers_order_client_->wait_for_service(std::chrono::seconds(1))) {
-      if (!rclcpp::ok()) {
-        RCLCPP_ERROR(this->get_logger(), "client interrupted while waiting for service orders to appear.");
-      }
-      RCLCPP_INFO(this->get_logger(), "waiting for service orders to appear...");
-    }
-    
-    // Invia la richiesta e definisci il callback per gestire la risposta
-    markers_order_client_->async_send_request(request_order, 
-          std::bind(&FindLowest::handle_order_response, this, std::placeholders::_1));
-
-    while (!marker_ids_client_->wait_for_service(std::chrono::seconds(1))) {
-      if (!rclcpp::ok()) {
-        RCLCPP_ERROR(this->get_logger(), "client interrupted while waiting for service orders to appear.");
-      }
-      RCLCPP_INFO(this->get_logger(), "waiting for service orders to appear...");
-    }
-
-    marker_ids_client_->async_send_request(request_ids, 
-        std::bind(&FindLowest::handle_ids_response, this, std::placeholders::_1));
-    
-
     return ActionExecutorClient::on_activate(previous_state);
   }
 
@@ -77,51 +57,69 @@ public:
   }
 
 private:
-  void handle_order_response(rclcpp::Client<rob_nav2::srv::MarkersOrder>::SharedFuture future)
+  void vect_callback(const std_msgs::msg::Int32MultiArray::SharedPtr msg)
   {
-    auto response = future.get();
-    RCLCPP_INFO(this->get_logger(), "Received order: ");
-    result_order = response->order; 
+    if (msg->data.size() == 0)
+    {
+      std::cout<<"Empty vector received"<<std::endl;
+      return;
+    }
+    else if (msg->data.size() == 1 || (msg->data.size() == result_ids_.size() + 1))
+    {
+      std::cout<<"Pushback"<<std::endl;
+      result_ids_.push_back(msg->data.back());
+    }
+    else if (msg->data.size() == result_ids_.size() || (msg->data.size() > result_ids_.size() + 1))
+    {
+      std::cout<<"Same size vector received, overwriting"<<std::endl;
+      result_ids_ = msg->data;
+    }
+    else 
+    {
+      std::cout<< "Received vector size is not correct"<<std::endl;
+      RCLCPP_ERROR(get_logger(), "Received vector size is not correct");
+    }
+    check_id();
   }
 
-  void handle_ids_response(rclcpp::Client<rob_nav2::srv::MarkerIds>::SharedFuture future)
+  void check_id()
   {
-    auto response = future.get();
-    RCLCPP_INFO(this->get_logger(), "Received marker IDs ");
-    result_ids = response->marker_ids; 
+    for (int i = 0; i < result_ids_.size(); i++)
+    {
+      if (result_ids_[i] < result_val_)
+      {
+        result_val_ = result_ids_[i];
+        result_index_ = i + 1;
+      }
+    }
   }
 
   void do_work()
   {
-    index = 0;
-    min_id = result_ids[0];
-    for (int i = 1; i < result_ids.size(); i++)
+    if (result_ids_.size() == 0)
     {
-      if (result_ids[i] < min_id)
+      RCLCPP_INFO(get_logger(), "No ids received");
+    }
+    if (result_ids_.size() == 4)
+    {
+      if (result_index_ > 0 && result_index_ <= 4)
       {
-        min_id = result_ids[i];
-        index = i;
+        // Sending integer after wp
+        std_msgs::msg::String msg;
+        msg.data = "wp" + std::to_string(result_index_);
+        lowest_publisher_->publish(msg);
+        
+        finish(true, 1.0 ,"Lowest waypoint found");
       }
     }
-    // Sending integer after wp
-    std_msgs::msg::String msg;
-    msg.data = "wp" + std::to_string(result_order[index]);
-    lowest_publisher_->publish(msg);
-    
-    finish(true, index,"Lowest waypoint found");
   }
 
-  int min_id;
-  int index;
-  std::shared_ptr<rob_nav2::srv::MarkersOrder::Request> request_order;
-  std::shared_ptr<rob_nav2::srv::MarkerIds::Request> request_ids;
-  std::vector<int> result_order;
-  std::vector<int> result_ids;
+  int32_t result_val_;
+  int32_t result_index_;
+  std::vector<int32_t> result_ids_;
 
+  rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr vect_sub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr lowest_publisher_;
-
-  rclcpp::Client<rob_nav2::srv::MarkersOrder>::SharedPtr markers_order_client_;
-  rclcpp::Client<rob_nav2::srv::MarkerIds>::SharedPtr marker_ids_client_;
 };
 
 int main(int argc, char ** argv)

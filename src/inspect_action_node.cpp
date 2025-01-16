@@ -11,12 +11,11 @@ Service: /marker_ids
 #include <sensor_msgs/msg/image.hpp>
 #include "geometry_msgs/msg/twist.hpp"
 #include "plansys2_executor/ActionExecutorClient.hpp"
-#include "rob_nav2/srv/marker_ids.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "std_msgs/msg/int32.hpp"
+#include "std_msgs/msg/int32_multi_array.hpp"
 
 using namespace std::chrono_literals;
 
@@ -34,7 +33,7 @@ public:
         std::bind(&Inspect::aruco_callback, this, _1));
 
     // initialization of the publisher for the index of the marker with the lowest id
-    lowest_id_publisher_ = this->create_publisher<std_msgs::msg::Int32>("/lowest_id_at", 10);
+    lowest_id_publisher_ = this->create_publisher<std_msgs::msg::Int32MultiArray>("/vect_id", 10);
 
     // index of the marker with the lowest id
     index_ = 0;
@@ -42,37 +41,34 @@ public:
 
   void aruco_callback(const ros2_aruco_interfaces::msg::ArucoMarkers::SharedPtr msg)
   {
-    int skip_aruco = 0;
     // control that id is not already in the vector
-    for (int i = 0; i < marker_ids_.size(); i++)
+    auto it = std::find(marker_ids_.begin(), marker_ids_.end(), msg->marker_ids.back());
+    if (it != marker_ids_.end())
     {
-      if (marker_ids_[i] == msg->marker_ids.back())
+      if (msg->marker_ids.back() == marker_ids_.back())
       {
-        // if the id is already in the vector, skip it
-        skip_aruco = 1;
+        progress_ = 1.0;
+        std::cout << "Stesso del precedente " << marker_ids_.back() << std::endl;
+      }
+      else if (marker_ids_.size() >= 4)
+      {
+        marker_ids_.erase(it);
       }
     }
-    // if the id is not already in the vector, add it
-    if (skip_aruco == 0)
+    else // == end
     {
       marker_ids_.push_back(msg->marker_ids.back());
-      // find lowest id
-      for (int j = index_; j < marker_ids_.size(); j++)
-      {
-        if (marker_ids_[j] < marker_ids_[index_])
-        {
-          // index of the marker with the lowest id
-          index_ = j;
-          // publish the index
-          auto message = std_msgs::msg::Int32();
-          message.data = index_;
-          lowest_id_publisher_->publish(message);
-        }
-      }
+      // send the vector message 
+      std_msgs::msg::Int32MultiArray msg;
+      msg.data = marker_ids_;
+      lowest_id_publisher_->publish(msg);
+      std::cout << "Marker id: " << marker_ids_.back() << std::endl;
+      std::cout << "Marker id: " << marker_ids_.back() << std::endl;
       // set progress to 1.0 to finish the action
       progress_ = 1.0;
     }
   }
+
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_activate(const rclcpp_lifecycle::State &previous_state)
   {
@@ -108,6 +104,7 @@ private:
       cmd.angular.y = 0.0;
       cmd.angular.z = 0.8;
 
+
       cmd_vel_pub_->publish(cmd);
     }
     else
@@ -128,14 +125,13 @@ private:
 
   float progress_;
 
-  rclcpp::Service<rob_nav2::srv::MarkerIds>::SharedPtr marker_ids_service_;
   // vector of aruco ids
-  std::vector<int> marker_ids_;
+  std::vector<int32_t> marker_ids_;
   rclcpp::Subscription<ros2_aruco_interfaces::msg::ArucoMarkers>::SharedPtr aruco_sub_;
 
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   // publisher for the index of the marker with the lowest id
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr lowest_id_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Int32MultiArray>::SharedPtr lowest_id_publisher_;
   // index of the marker with the lowest id
   int index_;
 };

@@ -13,9 +13,9 @@
         (visited ?r - robot ?wp - waypoint) ; waypoint has been visited by robot
         (inspected ?r - robot ?wp - waypoint) ; waypoint has been inspected by robot
         (lowest_found) ; waypoint is the lowest
-        
-        (all_inspected ?r - robot) ; all waypoints have been inspected
-    );; end Predicates ;;;;;;;;;;;;;;;;;;;;
+        (all_inspected ?r - robot) ; all waypoints have been inspected  
+    )
+    ;; end Predicates ;;;;;;;;;;;;;;;;;;;;
 
     ;; Actions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (:durative-action move
@@ -23,6 +23,7 @@
         :duration (= ?duration 1)
         :condition (and
             (at start (robot_at ?r ?wp1))
+            ; (at start (not (robot_at ?r ?wp2)))
         )
         :effect (and
             (at start (not (robot_at ?r ?wp1)))
@@ -40,6 +41,8 @@
         )
         :effect (and
             (at end (inspected ?r ?wp))
+            ; (at end (increase (waypoints_visited ?r) 1))
+            ; (at end (when (>= (waypoints_visited ?r) 4) (all_inspected ?r)))
         )
     )
 
@@ -47,14 +50,10 @@
         :parameters (?r - robot ?wp - waypoint)
         :duration (= ?duration 60)
         :condition (and 
-            ;;(at start ( ))
+            (at start (all_inspected ?r))
         )
         :effect (and 
             (at end (lowest_found))
         )
     )
-
-    ; move to lowest !!
-    
-    ;; Additional helper action to set all_inspected ;;;;;;;
 )

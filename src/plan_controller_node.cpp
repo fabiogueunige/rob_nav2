@@ -21,12 +21,14 @@ class PlanController : public rclcpp::Node
 {
 public:
   PlanController()
-      : rclcpp::Node("plan_controller"), state_(STARTING)
+  : rclcpp::Node("plan_controller"), state_(STARTING)
   {
-    lowest_id_subscriber_ = this->create_subscription<std_msgs::msg::Int32>(
-        "/lowest_id_at",
+    lowest_id_subscriber_ = this->create_subscription<std_msgs::msg::String>(
+        "/lowest_wp",
         10,
         std::bind(&PlanController::lowestIdCallback, this, std::placeholders::_1));
+
+      lowest_wp_ = "err";
   }
 
   void init()
@@ -292,24 +294,75 @@ public:
         if (executor_client_->getResult().value().success)
         {
           std::cout << "Successful finished " << std::endl;
+          
+          // To go to lowest waypoint
+          problem_expert_->addPredicate(plansys2::Predicate("(all_inspected franka)")); 
 
-          // Cleanning up
-          // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp4)"));
-          if (lowest_id_ == 1)
+          // Set the goal for next state
+          problem_expert_->setGoal(plansys2::Goal("(and(lowest_found))"));
+          // Compute the plan
+          auto domain = domain_expert_->getDomain();
+          auto problem = problem_expert_->getProblem();
+          auto plan = planner_client_->getPlan(domain, problem);
+
+          if (!plan.has_value())
           {
-            lowest_wp_ = "wp4";
+            std::cout << "Could not find plan to reach lowest goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            break;
           }
-          else if (lowest_id_ == 2)
+
+          // Execute the plan
+          if (executor_client_->start_plan_execution(plan.value()))
           {
-            lowest_wp_ = "wp1";
+            state_ = FIND_LOWEST;
           }
-          else if (lowest_id_ == 3)
+        }
+        else
+        {
+          for (const auto &action_feedback : feedback.action_execution_status)
           {
-            lowest_wp_ = "wp3";
+            if (action_feedback.status == plansys2_msgs::msg::ActionExecutionInfo::FAILED)
+            {
+              std::cout << "[" << action_feedback.action << "] finished with error: " << action_feedback.message_status << std::endl;
+            }
           }
-          else if (lowest_id_ == 4)
+
+          // Replan
+          auto domain = domain_expert_->getDomain();
+          auto problem = problem_expert_->getProblem();
+          auto plan = planner_client_->getPlan(domain, problem);
+
+          if (!plan.has_value())
           {
-            lowest_wp_ = "wp2";
+            std::cout << "Unsuccessful replan attempt to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            break;
+          }
+
+          // Execute the plan
+          executor_client_->start_plan_execution(plan.value());
+        }
+      }
+    }
+    break;
+    case FIND_LOWEST:
+    {
+      auto feedback = executor_client_->getFeedBack();
+
+      for (const auto &action_feedback : feedback.action_execution_status)
+      {
+        std::cout << "[" << action_feedback.action << " " << action_feedback.completion * 100.0 << "%]";
+      }
+      std::cout << std::endl;
+
+      if (!executor_client_->execute_and_check_plan() && executor_client_->getResult())
+      {
+        if (executor_client_->getResult().value().success)
+        {
+          std::cout << "Successful finished " << std::endl;
+
+          if (lowest_wp_ == "wp1" || lowest_wp_ == "wp2" || lowest_wp_ == "wp3" || lowest_wp_ == "wp4")
+          {
+            std::cout << "Lowest waypoint found: " << lowest_wp_ << std::endl;
           }
           else
           {
@@ -327,7 +380,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Could not find plan to reach goal " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Could not find plan to reach lowest waypoint " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 
@@ -364,6 +417,7 @@ public:
         }
       }
     }
+    break;
     case TO_LOWEST:
     {
 
@@ -422,22 +476,24 @@ private:
     PATROL_WP2,
     PATROL_WP3,
     PATROL_WP4,
+    FIND_LOWEST,
     TO_LOWEST
   } StateType;
   StateType state_;
 
-  void lowestIdCallback(const std_msgs::msg::Int32::SharedPtr msg)
+  void lowestIdCallback(const std_msgs::msg::String::SharedPtr msg)
   {
-    RCLCPP_INFO(this->get_logger(), "Received lowest ID: %d", msg->data);
-    lowest_id_ = msg->data;
+    std::cout << "Received lowest ID: " << std::endl;
+    RCLCPP_INFO(this->get_logger(), "Received lowest ID: ");
+    lowest_wp_ = msg->data;
   }
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr lowest_sub_;
+
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
   std::shared_ptr<plansys2::PlannerClient> planner_client_;
   std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
   std::shared_ptr<plansys2::ExecutorClient> executor_client_;
-  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr lowest_id_subscriber_;
-  int lowest_id_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr lowest_id_subscriber_;
+
   std::string lowest_wp_;
 };
 
