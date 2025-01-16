@@ -95,8 +95,8 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          reached_wp1 = 1;
-          std::cout << "dist_to_move finished " << std::endl;
+          robot_at = 1;
+          std::cout << "Succesful inspected WP1 " << std::endl;
 
           // Cleanning up
           // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp1)"));
@@ -118,7 +118,7 @@ public:
           // Execute the plan
           if (executor_client_->start_plan_execution(plan.value()))
           {
-            state_ = PATROL_WP4;
+            state_ = PATROL_WP2;
           }
         }
         else
@@ -162,7 +162,8 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          std::cout << "Successful finished " << std::endl;
+          robot_at = 2;
+          std::cout << "Succesful inspected WP2 " << std::endl;
 
           // Cleanning up
           // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp2)"));
@@ -228,7 +229,8 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          std::cout << "Successful finished " << std::endl;
+          robot_at = 3;
+          std::cout << "Successful inspected WP3 " << std::endl;
 
           // Cleanning up
           // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp3)"));
@@ -298,9 +300,8 @@ public:
       {
         if (executor_client_->getResult().value().success)
         {
-          reached_wp2 = 1;
-          reached_wp1 = 0;
-          std::cout << "Successful finished " << std::endl;
+          robot_at = 4;
+          std::cout << "Successful inspected WP4 " << std::endl;
 
           // Cleanning up
           // problem_expert_->removePredicate(plansys2::Predicate("(patrolled wp4)"));
@@ -310,7 +311,7 @@ public:
 
           if (lowest_id_ == 0)
           {
-            if (reached_wp1 == 1){
+            if (robot_at == 1){
               break;
             }
             problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp1))"));
@@ -318,7 +319,7 @@ public:
           }
           else if (lowest_id_ == 1)
           {
-            if (reached_wp2 == 1){
+            if (robot_at == 2){
               break;
             }
 
@@ -328,10 +329,16 @@ public:
           }
           else if (lowest_id_ == 2)
           {
+            if (robot_at == 3){
+              break;
+            }
             problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp3))"));
           }
           else if (lowest_id_ == 3)
           {
+            if (robot_at == 4){
+              break;
+            }
             problem_expert_->setGoal(plansys2::Goal("(and(robot_at franka wp4))"));
           }
           else
@@ -465,10 +472,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr lowest_id_subscriber_;
   int lowest_id_;
   std::string lowest_wp_;
-  int reached_wp1 = 0;
-  int reached_wp2 = 0;
-  int reached_wp3 = 0;
-  int reached_wp4 = 0;
+  int robot_at = 0;
 };
 
 int main(int argc, char **argv)
