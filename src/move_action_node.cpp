@@ -54,7 +54,7 @@ public:
     wp.pose.position.y = -5.0;
     waypoints_["wp2"] = wp;
 
-    wp.pose.position.x = -1.8;
+    wp.pose.position.x = -1.4;
     wp.pose.position.y = -7.6;
     waypoints_["wp3"] = wp;
 
