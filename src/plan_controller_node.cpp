@@ -52,6 +52,7 @@ public:
     problem_expert_->addPredicate(plansys2::Predicate("(robot_at franka home)"));
     problem_expert_->addPredicate(plansys2::Predicate("(visited franka home)"));
     problem_expert_->addPredicate(plansys2::Predicate("(inspected franka home)"));
+    // problem_expert_->addPredicate(plansys2::Predicate("(all_inspected franka)")); 
   }
 
   void step()
@@ -297,7 +298,7 @@ public:
           problem_expert_->addPredicate(plansys2::Predicate("(all_inspected franka)")); 
 
           // Set the goal for next state
-          problem_expert_->setGoal(plansys2::Goal("(and(lowest_found))"));
+          problem_expert_->setGoal(plansys2::Goal("(and(lowest_found franka))"));
           // Compute the plan
           auto domain = domain_expert_->getDomain();
           auto problem = problem_expert_->getProblem();
@@ -380,7 +381,7 @@ public:
 
           if (!plan.has_value())
           {
-            std::cout << "Could not find plan to reach lowest waypoint " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
+            std::cout << "Could not find plan to find lowest waypoint " << parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
             break;
           }
 

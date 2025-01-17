@@ -38,9 +38,12 @@ def generate_launch_description():
 
     return LaunchDescription([
         # Declare launch arguments
-        slam_cmd,
+        TimerAction(
+            period=0.5,
+            actions=[slam_cmd]
+        ),
         TimerAction(
             period=2.0,
             actions=[nav2_cmd]
-        ),
+        )
     ])

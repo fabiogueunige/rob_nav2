@@ -15,13 +15,13 @@ def generate_launch_description():
     test_robot_description_share = FindPackageShare(package='rob_nav2').find('rob_nav2')
     default_model_path = os.path.join(test_robot_description_share, 'urdf/robot_nav2.xacro')
     # Debug world
-    default_world_path = os.path.join(test_robot_description_share, 'worlds/ass2_new.world')
-    # default_world_path = os.path.join(test_robot_description_share, 'worlds/assignment2.world')
+    # default_world_path = os.path.join(test_robot_description_share, 'worlds/ass2_new.world')
+    default_world_path = os.path.join(test_robot_description_share, 'worlds/assignment2.world')
     rviz_config_path = os.path.join(test_robot_description_share, 'config/rviz.rviz')
 
     # Declare launch arguments with new default values
     declare_x_pos = DeclareLaunchArgument('x', default_value='0.0', description='X position of the robot')
-    declare_y_pos = DeclareLaunchArgument('y', default_value='1.0', description='Y position of the robot')
+    declare_y_pos = DeclareLaunchArgument('y', default_value='0.9', description='Y position of the robot')
     declare_z_pos = DeclareLaunchArgument('z', default_value='0.05', description='Z position of the robot')
     declare_roll = DeclareLaunchArgument('roll', default_value='0.0', description='Roll orientation of the robot')
     declare_pitch = DeclareLaunchArgument('pitch', default_value='0.0', description='Pitch orientation of the robot')
@@ -52,24 +52,24 @@ def generate_launch_description():
         arguments=[
             '-entity', 'my_test_robot',
             '-topic', '/robot_description',
-            # '-x', LaunchConfiguration('x'),
-            # '-y', LaunchConfiguration('y'),
-            # '-z', LaunchConfiguration('z'),
-            # '-R', LaunchConfiguration('roll'),
-            # '-P', LaunchConfiguration('pitch'),
-            # '-Y', LaunchConfiguration('yaw')
+             '-x', LaunchConfiguration('x'),
+             '-y', LaunchConfiguration('y'),
+             '-z', LaunchConfiguration('z'),
+             '-R', LaunchConfiguration('roll'),
+             '-P', LaunchConfiguration('pitch'),
+             '-Y', LaunchConfiguration('yaw')
         ],
         output='screen'
     )
  
 
     return LaunchDescription([
-        # declare_x_pos,
-        # declare_y_pos,
-        # declare_z_pos,
-        # declare_roll,
-        # declare_pitch,
-        # declare_yaw,
+        declare_x_pos,
+        declare_y_pos,
+        declare_z_pos,
+        declare_roll,
+        declare_pitch,
+        declare_yaw,
         DeclareLaunchArgument(name='model', default_value=default_model_path, description='Absolute path to robot urdf file'),
         robot_state_publisher_node,
         joint_state_publisher_node,

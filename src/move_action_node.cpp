@@ -35,14 +35,14 @@ class MoveAction : public plansys2::ActionExecutorClient
 {
 public:
   MoveAction()
-  : plansys2::ActionExecutorClient("move", 1s)
+  : plansys2::ActionExecutorClient("move", 500ms)
   {
     geometry_msgs::msg::PoseStamped wp;
     wp.header.frame_id = "map";
     wp.header.stamp = now();
     
-    wp.pose.position.x = 6.0;
-    wp.pose.position.y = 2.0;
+    wp.pose.position.x = 6.9;
+    wp.pose.position.y = 1.5;
     wp.pose.position.z = 0.0;
     wp.pose.orientation.x = 0.0;
     wp.pose.orientation.y = 0.0;
@@ -50,12 +50,12 @@ public:
     wp.pose.orientation.w = 1.0;
     waypoints_["wp1"] = wp;
         
-    wp.pose.position.x = 7.0;
+    wp.pose.position.x = 6.8;
     wp.pose.position.y = -5.0;
     waypoints_["wp2"] = wp;
 
-    wp.pose.position.x = -2.0;
-    wp.pose.position.y = -7.5;
+    wp.pose.position.x = -1.8;
+    wp.pose.position.y = -7.6;
     waypoints_["wp3"] = wp;
 
     wp.pose.position.x = -7.0;
@@ -104,6 +104,7 @@ public:
     goal_pos_ = waypoints_[wp_to_navigate];
     navigation_goal_.pose = goal_pos_;
 
+    
     dist_to_move = getDistance(goal_pos_.pose, current_pos_);
 
     auto send_goal_options =
@@ -137,14 +138,6 @@ private:
 
   void do_work()
   {
-
-    dist_to_move = getDistance(goal_pos_.pose, current_pos_);
-    std::cout << "dist_to_move" << std::endl;
-
-    if (dist_to_move < 0.8) {
-      send_feedback(1.0, "Move completed");
-      finish(true, 1.0, "Move completed");
-    }
   }
 
   std::map<std::string, geometry_msgs::msg::PoseStamped> waypoints_;

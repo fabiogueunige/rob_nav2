@@ -53,13 +53,13 @@ public:
     {
       if (msg->marker_ids.back() == marker_ids_.back())
       {
-        progress_ = 1.0;
+        progress_ = 0.5;
         std::cout << "Stesso del precedente " << marker_ids_.back() << std::endl;
       }
       else if (marker_ids_.size() >= 4)
       {
+        std::cout << "Superato dimensione e diverso" << marker_ids_[std::distance(marker_ids_.begin(), it)] << std::endl;
         marker_ids_.erase(it);
-        std::cout << "Superato dimensione e diverso" << std::endl;
         return ;
       }
     }
@@ -72,10 +72,10 @@ public:
       // set progress to 1.0 to finish the action
       progress_ = 1.0;
       active_ = false;
-    }
-    std_msgs::msg::Int32MultiArray msg_val;
+      std_msgs::msg::Int32MultiArray msg_val;
     msg_val.data = marker_ids_;
-    lowest_id_publisher_->publish(msg_val);   
+    lowest_id_publisher_->publish(msg_val); 
+    }
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -94,7 +94,7 @@ public:
   on_deactivate(const rclcpp_lifecycle::State &previous_state)
   {
     cmd_vel_pub_->on_deactivate();
-
+    active_ = false;
     return ActionExecutorClient::on_deactivate(previous_state);
   }
 
@@ -117,12 +117,11 @@ private:
 
       auto current_time = this->now();
       auto duration = current_time - start_time_;
-      if (duration > rclcpp::Duration(40s))
+      if (duration > rclcpp::Duration(20s))
       {     
         cmd.angular.z = 0.0;
 
         cmd_vel_pub_->publish(cmd);
-        active_ = true; // may be inspect problem
         finish(false, progress_, "Action timed out");
       }
       else {

@@ -64,19 +64,15 @@ private:
       std::cout<<"Empty vector received"<<std::endl;
       return;
     }
-    else if (msg->data.size() == 1 || (msg->data.size() == result_ids_.size() + 1))
+    else if (msg->data.size() == result_ids_.size() + 1)
     {
       std::cout<<"Value in find_lowest"<<std::endl;
       result_ids_.push_back(msg->data.back());
     }
-    else if (msg->data.size() == result_ids_.size() || (msg->data.size() > result_ids_.size() + 1))
-    {
-      std::cout<<"Same size vector received, overwriting"<<std::endl;
-      result_ids_ = msg->data;
-    }
-    else 
+    else
     {
       std::cout<< "Received vector size is strange "<<msg->data.size()<<std::endl;
+      result_ids_ = msg->data;
     }
     check_id();
   }
