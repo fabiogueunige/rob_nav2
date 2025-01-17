@@ -1,6 +1,11 @@
 # Rob_nav2
 Inside rob_nav2 there is all the code developed for the assigment of Experimantal Robotics course of Robotic Engeneering master degree at the University of Genoa by the students: Andrea Chiappe, Alberto Di Donna and Fabio Guelfi.
 
+## Video
+![Demo del video](https://github.com/fabiogueunige/rob_nav2/blob/resources/gifExp.gif)  
+
+[Mp4 video file here](https://github.com/fabiogueunige/rob_nav2/blob/resources/Experimental.mp4)
+
 # Download 
 
 This code is written for the ros2 humble version, so running it in foxy(previous version of ros) could give backs some errors\\
