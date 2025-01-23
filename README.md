@@ -6,6 +6,9 @@ Inside rob_nav2 there is all the code developed for the assigment of Experimanta
 
 [Mp4 video file here](https://github.com/fabiogueunige/rob_nav2/blob/resources/Experimental.mp4)
 
+## Diagram Image
+![Image of the nodes](https://github.com/fabiogueunige/rob_nav2/blob/resources/rosgraph_rob_nav2.png)  
+
 # Download 
 
 This code is written for the ros2 humble version, so running it in foxy(previous version of ros) could give backs some errors\\
